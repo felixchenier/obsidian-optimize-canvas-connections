@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { ItemView, App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -17,63 +17,22 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('dice', 'Shorten links', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			this.CleanCanvas();
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
+			id: 'shorten-links-in-canvas',
+			name: 'Shorten links in canvas',
 			callback: () => {
-				new SampleModal(this.app).open();
+				this.CleanCanvas();
 			}
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
+		
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
@@ -81,6 +40,119 @@ export default class MyPlugin extends Plugin {
 	onunload() {
 
 	}
+	
+	async CleanCanvas() {
+		const canvasView = app.workspace.getActiveViewOfType(ItemView);
+		if (canvasView?.getViewType() !== "canvas") {
+			return
+		}
+		
+		const activeFile = this.app.workspace.getActiveFile();
+
+		if(!activeFile) {
+			new Notice("No canvas detected!")
+			return
+		}
+		
+		const content = await this.app.vault.cachedRead(activeFile);
+		const canvasData: CanvasData = JSON.parse(content);
+		
+		// Go through every edge
+		for (let iEdge = 0; iEdge < canvasData['edges'].length; iEdge++) {
+		
+			// Find from and to nodes
+			let fromNodeID = canvasData['edges'][iEdge]['fromNode'];
+			let toNodeID = canvasData['edges'][iEdge]['toNode'];
+			
+			let fromNode = canvasData['nodes'].filter(obj => {
+				return obj.id === fromNodeID
+			})[0];
+			let toNode = canvasData['nodes'].filter(obj => {
+				return obj.id === toNodeID
+			})[0];
+			
+			// Calculate the 16 possibilities of distance
+			let distances = []
+			
+			for (const fromSide of ['top', 'bottom', 'left', 'right']) {
+
+				let fromPoint = {'x': 0, 'y': 0};
+				if (fromSide == 'top') {
+					fromPoint = {'x': fromNode['x'], 'y': fromNode['y'] - fromNode['height']/2};
+				} else if (fromSide == 'bottom') {
+					fromPoint = {'x': fromNode['x'], 'y': fromNode['y'] + fromNode['height']/2};
+				} else if (fromSide == 'left') {
+					fromPoint = {'x': fromNode['x'] - fromNode['width']/2, 'y': fromNode['y']};
+				} else if (fromSide == 'right') {
+					fromPoint = {'x': fromNode['x'] + fromNode['width']/2, 'y': fromNode['y']};
+				}
+
+				for (const toSide of ['top', 'bottom', 'left', 'right']) {
+
+					let toPoint = {'x': 0, 'y': 0};
+					if (toSide == 'top') {
+						toPoint = {'x': toNode['x'], 'y': toNode['y'] - toNode['height']/2};
+					} else if (toSide == 'bottom') {
+						toPoint = {'x': toNode['x'], 'y': toNode['y'] + toNode['height']/2};
+					} else if (toSide == 'left') {
+						toPoint = {'x': toNode['x'] - toNode['width']/2, 'y': toNode['y']};
+					} else if (toSide == 'right') {
+						toPoint = {'x': toNode['x'] + toNode['width']/2, 'y': toNode['y']};
+					}
+					
+					distances.push({
+						'fromSide': fromSide,
+						'toSide': toSide,
+						'distance': (toPoint.x - fromPoint.x) ** 2 + (toPoint.y - fromPoint.y) ** 2});
+					
+				}
+			}
+			
+			// Find the best one			
+			distances = distances.sort(function(a, b) {
+			    return a.distance - b.distance;
+			});
+			
+			// Assign it
+			switch(distances[0]['fromSide']) {
+				case 'top':
+					canvasData['edges'][iEdge]['fromSide'] = 'top';
+					break;
+				case 'bottom':
+					canvasData['edges'][iEdge]['fromSide'] = 'bottom';
+					break;
+				case 'left':
+					canvasData['edges'][iEdge]['fromSide'] = 'left';
+					break;
+				case 'right':
+					canvasData['edges'][iEdge]['fromSide'] = 'right';
+					break;
+			}					
+
+			switch(distances[0]['toSide']) {
+				case 'top':
+					canvasData['edges'][iEdge]['toSide'] = 'top';
+					break;
+				case 'bottom':
+					canvasData['edges'][iEdge]['toSide'] = 'bottom';
+					break;
+				case 'left':
+					canvasData['edges'][iEdge]['toSide'] = 'left';
+					break;
+				case 'right':
+					canvasData['edges'][iEdge]['toSide'] = 'right';
+					break;
+			}					
+			
+			// Save it
+			this.app.vault.modify(activeFile, JSON.stringify(canvasData));
+			
+			
+		}
+
+	}
+
+
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -91,21 +163,7 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
 
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
@@ -134,4 +192,81 @@ class SampleSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 	}
+}
+
+
+
+
+//------------------------------------
+// THIS IS A COPY-PASTE FROM canvas.d.ts BECAUSE I DON'T KNOW HOW TO IMPORT IT YET
+
+// A color used to encode color data for nodes and edges
+// can be a number (like "1") representing one of the (currently 6) supported colors.
+// or can be a custom color using the hex format "#FFFFFFF".
+export type CanvasColor = string;
+
+// The overall canvas file's JSON
+export interface CanvasData {
+    nodes: AllCanvasNodeData[];
+    edges: CanvasEdgeData[];
+}
+
+// A node
+export interface CanvasNodeData {
+    // The unique ID for this node
+    id: string;
+    // The positional data
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    // The color of this node
+    color?: CanvasColor;
+}
+
+export type AllCanvasNodeData = CanvasFileData | CanvasTextData | CanvasLinkData | CanvasGroupData;
+
+// A node that is a file, where the file is located somewhere in the vault.
+export interface CanvasFileData extends CanvasNodeData {
+    type: 'file';
+    file: string;
+    // An optional subpath which links to a heading or a block. Always starts with a `#`.
+    subpath?: string;
+}
+
+// A node that is plaintext.
+export interface CanvasTextData extends CanvasNodeData {
+    type: 'text';
+    text: string;
+}
+
+// A node that is an external resource.
+export interface CanvasLinkData extends CanvasNodeData {
+    type: 'link';
+    url: string;
+}
+
+// A node that represents a group.
+export interface CanvasGroupData extends CanvasNodeData {
+    type: 'group';
+    label?: string;
+}
+
+// The side of the node that a connection is connected to
+export type NodeSide = 'top' | 'right' | 'bottom' | 'left';
+
+// An edge
+export interface CanvasEdgeData {
+    // The unique ID for this edge
+    id: string;
+    // The node ID and side where this edge starts
+    fromNode: string;
+    fromSide: NodeSide;
+    // The node ID and side where this edge ends
+    toNode: string;
+    toSide: NodeSide;
+    // The color of this edge
+    color?: CanvasColor;
+    // The text label of this edge, if available
+    label?: string;
 }
