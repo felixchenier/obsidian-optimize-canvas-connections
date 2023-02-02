@@ -53,26 +53,26 @@ export default class MyPlugin extends Plugin {
 
 				let fromPoint = {'x': 0, 'y': 0};
 				if (fromSide == 'top') {
-					fromPoint = {'x': fromNode['x'], 'y': fromNode['y'] - fromNode['height']/2};
-				} else if (fromSide == 'bottom') {
-					fromPoint = {'x': fromNode['x'], 'y': fromNode['y'] + fromNode['height']/2};
-				} else if (fromSide == 'left') {
-					fromPoint = {'x': fromNode['x'] - fromNode['width']/2, 'y': fromNode['y']};
-				} else if (fromSide == 'right') {
 					fromPoint = {'x': fromNode['x'] + fromNode['width']/2, 'y': fromNode['y']};
+				} else if (fromSide == 'bottom') {
+					fromPoint = {'x': fromNode['x'] + fromNode['width']/2, 'y': fromNode['y'] + fromNode['height']};
+				} else if (fromSide == 'left') {
+					fromPoint = {'x': fromNode['x'], 'y': fromNode['y'] + fromNode['height']/2};
+				} else if (fromSide == 'right') {
+					fromPoint = {'x': fromNode['x'] + fromNode['width'], 'y': fromNode['y'] + fromNode['height']/2};
 				}
 				
 				for (const toSide of ['top', 'bottom', 'left', 'right']) {
 
 					let toPoint = {'x': 0, 'y': 0};
 					if (toSide == 'top') {
-						toPoint = {'x': toNode['x'], 'y': toNode['y'] - toNode['height']/2};
-					} else if (toSide == 'bottom') {
-						toPoint = {'x': toNode['x'], 'y': toNode['y'] + toNode['height']/2};
-					} else if (toSide == 'left') {
-						toPoint = {'x': toNode['x'] - toNode['width']/2, 'y': toNode['y']};
-					} else if (toSide == 'right') {
 						toPoint = {'x': toNode['x'] + toNode['width']/2, 'y': toNode['y']};
+					} else if (toSide == 'bottom') {
+						toPoint = {'x': toNode['x'] + toNode['width']/2, 'y': toNode['y'] + toNode['height']};
+					} else if (toSide == 'left') {
+						toPoint = {'x': toNode['x'], 'y': toNode['y'] + toNode['height']/2};
+					} else if (toSide == 'right') {
+						toPoint = {'x': toNode['x'] + toNode['width'], 'y': toNode['y'] + toNode['height']/2};
 					}
 
 					distances.push({
