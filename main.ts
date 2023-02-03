@@ -19,7 +19,14 @@ export default class MyPlugin extends Plugin {
 			id: 'optimize-shortest-path',
 			name: 'Optimize (shortest path)',
 			callback: () => {
-				this.Optimize();
+				this.Optimize('shortest-path');
+			}
+		});
+		this.addCommand({
+			id: 'optimize-preserve-axes',
+			name: 'Optimize (preserve axes)',
+			callback: () => {
+				this.Optimize('preserve-axes');
 			}
 		});
 		
@@ -29,7 +36,7 @@ export default class MyPlugin extends Plugin {
 
 	}
 	
-	async Optimize() {
+	async Optimize(option: string) {
 		const canvasView = app.workspace.getActiveViewOfType(ItemView);
 		if (canvasView?.getViewType() !== "canvas") {
 			new Notice("The current view must be a canvas");
@@ -46,10 +53,47 @@ export default class MyPlugin extends Plugin {
 			let fromNode = edge['from']['node'];
 			let toNode = edge['to']['node'];
 			
-			// Calculate the 16 possibilities of distance
+			// Calculate the many possibilities of distance
+
+			let fromPossibilities = [edge['from']['side']];  // default = no change
+			switch(option) {
+				case "shortest-path":
+					fromPossibilities = ['top', 'bottom', 'left', 'right'];
+					break
+				case "preserve-axes":
+					switch(edge['from']['side']) {
+						case 'top':
+						case 'bottom':
+							fromPossibilities = ['top', 'bottom'];
+							break;
+						case 'left':
+						case 'right':
+							fromPossibilities = ['left', 'right'];
+							break;
+					}
+			}
+
+			let toPossibilities = [edge['to']['side']];  // default = no change
+			switch(option) {
+				case "shortest-path":
+					toPossibilities = ['top', 'bottom', 'left', 'right'];
+					break
+				case "preserve-axes":
+					switch(edge['to']['side']) {
+						case 'top':
+						case 'bottom':
+							toPossibilities = ['top', 'bottom'];
+							break;
+						case 'left':
+						case 'right':
+							toPossibilities = ['left', 'right'];
+							break;
+					}
+			}
+			
 			let distances = []
 			
-			for (const fromSide of ['top', 'bottom', 'left', 'right']) {
+			for (const fromSide of fromPossibilities) {
 
 				let fromPoint = {'x': 0, 'y': 0};
 				if (fromSide == 'top') {
@@ -62,7 +106,7 @@ export default class MyPlugin extends Plugin {
 					fromPoint = {'x': fromNode['x'] + fromNode['width'], 'y': fromNode['y'] + fromNode['height']/2};
 				}
 				
-				for (const toSide of ['top', 'bottom', 'left', 'right']) {
+				for (const toSide of toPossibilities) {
 
 					let toPoint = {'x': 0, 'y': 0};
 					if (toSide == 'top') {
