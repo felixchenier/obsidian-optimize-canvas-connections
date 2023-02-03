@@ -1,2 +1,4 @@
 npm run build
-
+mkdir ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/Notes/.obsidian/plugins/obsidian-optimize-canvas-connections
+cp main.js ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/Notes/.obsidian/plugins/obsidian-optimize-canvas-connections/
+cp manifest.json ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/Notes/.obsidian/plugins/obsidian-optimize-canvas-connections/

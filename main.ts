@@ -16,10 +16,10 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'shorten-links-in-canvas',
-			name: 'Shorten links in canvas',
+			id: 'optimize-shortest-path',
+			name: 'Optimize (shortest path)',
 			callback: () => {
-				this.CleanCanvas();
+				this.Optimize();
 			}
 		});
 		
@@ -29,7 +29,7 @@ export default class MyPlugin extends Plugin {
 
 	}
 	
-	async CleanCanvas() {
+	async Optimize() {
 		const canvasView = app.workspace.getActiveViewOfType(ItemView);
 		if (canvasView?.getViewType() !== "canvas") {
 			new Notice("The current view must be a canvas");
