@@ -16,17 +16,17 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'optimize-shortest-path',
-			name: 'Optimize (shortest path)',
-			callback: () => {
-				this.Optimize('shortest-path');
-			}
-		});
-		this.addCommand({
 			id: 'optimize-preserve-axes',
 			name: 'Optimize (preserve axes)',
 			callback: () => {
 				this.Optimize('preserve-axes');
+			}
+		});
+		this.addCommand({
+			id: 'optimize-shortest-path',
+			name: 'Optimize (shortest path)',
+			callback: () => {
+				this.Optimize('shortest-path');
 			}
 		});
 		
