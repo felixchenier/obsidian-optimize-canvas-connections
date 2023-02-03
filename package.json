@@ -1,6 +1,6 @@
 {
 	"name": "Optimize Canvas Connections",
-	"version": "0.0.8",
+	"version": "0.9.0",
 	"description": "An Obsidian plugin that declutters a canvas by reconnecting notes using their nearest edges.",
 	"main": "main.js",
 	"scripts": {
