@@ -14,7 +14,6 @@ export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 
 	async onload() {
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: 'optimize-preserve-axes-selection',
 			name: 'Optimize selection (preserve axes)',
@@ -29,6 +28,9 @@ export default class MyPlugin extends Plugin {
 				this.Optimize('shortest-path', false);
 			}
 		});
+		/*
+		// Commented before I'm not sure these commands are that relevant:
+		// We may just select-all (CMD+A/CTRL+A) before running the command.
 		this.addCommand({
 			id: 'optimize-preserve-axes-canvas',
 			name: 'Optimize canvas (preserve axes)',
@@ -43,6 +45,7 @@ export default class MyPlugin extends Plugin {
 				this.Optimize('shortest-path', true);
 			}
 		});		
+		*/
 	}
 
 	onunload() {
