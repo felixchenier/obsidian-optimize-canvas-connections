@@ -16,27 +16,40 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'optimize-preserve-axes',
-			name: 'Optimize (preserve axes)',
+			id: 'optimize-preserve-axes-selection',
+			name: 'Optimize selection (preserve axes)',
 			callback: () => {
-				this.Optimize('preserve-axes');
+				this.Optimize('preserve-axes', false);
 			}
 		});
 		this.addCommand({
-			id: 'optimize-shortest-path',
-			name: 'Optimize (shortest path)',
+			id: 'optimize-shortest-path-selection',
+			name: 'Optimize selection (shortest path)',
 			callback: () => {
-				this.Optimize('shortest-path');
+				this.Optimize('shortest-path', false);
 			}
 		});
-		
+		this.addCommand({
+			id: 'optimize-preserve-axes-canvas',
+			name: 'Optimize canvas (preserve axes)',
+			callback: () => {
+				this.Optimize('preserve-axes', true);
+			}
+		});
+		this.addCommand({
+			id: 'optimize-shortest-path-canvas',
+			name: 'Optimize canvas (shortest path)',
+			callback: () => {
+				this.Optimize('shortest-path', true);
+			}
+		});		
 	}
 
 	onunload() {
 
 	}
 	
-	async Optimize(option: string) {
+	async Optimize(option: string, applyToAll: boolean) {
 		const canvasView = app.workspace.getActiveViewOfType(ItemView);
 		if (canvasView?.getViewType() !== "canvas") {
 			new Notice("The current view must be a canvas");
@@ -45,6 +58,14 @@ export default class MyPlugin extends Plugin {
 		
 		// @ts-ignore
 		const canvas = canvasView?.canvas;
+		
+		// Read current selection
+		const currentSelection = canvas?.selection;
+		let selectedIDs = new Array();
+		// @ts-ignore
+		currentSelection.forEach(function(selection) {
+			selectedIDs.push(selection.id);
+		})
 		
 		// Go through every edge
 		for (let [edgeKey, edge] of canvas['edges']) {
@@ -56,39 +77,45 @@ export default class MyPlugin extends Plugin {
 			// Calculate the many possibilities of distance
 
 			let fromPossibilities = [edge['from']['side']];  // default = no change
-			switch(option) {
-				case "shortest-path":
-					fromPossibilities = ['top', 'bottom', 'left', 'right'];
-					break
-				case "preserve-axes":
-					switch(edge['from']['side']) {
-						case 'top':
-						case 'bottom':
-							fromPossibilities = ['top', 'bottom'];
-							break;
-						case 'left':
-						case 'right':
-							fromPossibilities = ['left', 'right'];
-							break;
-					}
+
+			if (applyToAll || selectedIDs.includes(fromNode['id'])){
+				switch(option) {
+					case "shortest-path":
+						fromPossibilities = ['top', 'bottom', 'left', 'right'];
+						break
+					case "preserve-axes":
+						switch(edge['from']['side']) {
+							case 'top':
+							case 'bottom':
+								fromPossibilities = ['top', 'bottom'];
+								break;
+							case 'left':
+							case 'right':
+								fromPossibilities = ['left', 'right'];
+								break;
+						}
+				}
 			}
 
 			let toPossibilities = [edge['to']['side']];  // default = no change
-			switch(option) {
-				case "shortest-path":
-					toPossibilities = ['top', 'bottom', 'left', 'right'];
-					break
-				case "preserve-axes":
-					switch(edge['to']['side']) {
-						case 'top':
-						case 'bottom':
-							toPossibilities = ['top', 'bottom'];
-							break;
-						case 'left':
-						case 'right':
-							toPossibilities = ['left', 'right'];
-							break;
-					}
+			
+			if (applyToAll || selectedIDs.includes(toNode['id'])){
+				switch(option) {
+					case "shortest-path":
+						toPossibilities = ['top', 'bottom', 'left', 'right'];
+						break
+					case "preserve-axes":
+						switch(edge['to']['side']) {
+							case 'top':
+							case 'bottom':
+								toPossibilities = ['top', 'bottom'];
+								break;
+							case 'left':
+							case 'right':
+								toPossibilities = ['left', 'right'];
+								break;
+						}
+				}
 			}
 			
 			let distances = []
