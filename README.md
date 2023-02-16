@@ -16,9 +16,9 @@ Run command:
 
 `Optimize Canvas Connections: Optimize canvas (preserve axes)`
 
-or
-
 `Optimize Canvas Connections: Optimize selection (shortest path)`
+
+or
 
 `Optimize Canvas Connections: Optimize canvas (shortest path)`
 
