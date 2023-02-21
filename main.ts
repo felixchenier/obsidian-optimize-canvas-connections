@@ -17,35 +17,31 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'optimize-preserve-axes-selection',
 			name: 'Optimize selection (preserve axes)',
-			callback: () => {
-				this.Optimize('preserve-axes', false);
+			checkCallback: (checking: boolean) => {
+				const canvasView = app.workspace.getActiveViewOfType(ItemView);
+				if (canvasView?.getViewType() == "canvas") {
+					if (!checking) {
+						this.Optimize('preserve-axes', false);
+					}
+					return true;
+				}
+			return false;
 			}
 		});
 		this.addCommand({
 			id: 'optimize-shortest-path-selection',
 			name: 'Optimize selection (shortest path)',
-			callback: () => {
-				this.Optimize('shortest-path', false);
+			checkCallback: (checking: boolean) => {
+				const canvasView = app.workspace.getActiveViewOfType(ItemView);
+				if (canvasView?.getViewType() == "canvas") {
+					if (!checking) {
+						this.Optimize('shortest-path', false);
+					}
+					return true;
+				}
+			return false;
 			}
 		});
-		/*
-		// Commented before I'm not sure these commands are that relevant:
-		// We may just select-all (CMD+A/CTRL+A) before running the command.
-		this.addCommand({
-			id: 'optimize-preserve-axes-canvas',
-			name: 'Optimize canvas (preserve axes)',
-			callback: () => {
-				this.Optimize('preserve-axes', true);
-			}
-		});
-		this.addCommand({
-			id: 'optimize-shortest-path-canvas',
-			name: 'Optimize canvas (shortest path)',
-			callback: () => {
-				this.Optimize('shortest-path', true);
-			}
-		});		
-		*/
 	}
 
 	onunload() {
@@ -54,10 +50,6 @@ export default class MyPlugin extends Plugin {
 	
 	async Optimize(option: string, applyToAll: boolean) {
 		const canvasView = app.workspace.getActiveViewOfType(ItemView);
-		if (canvasView?.getViewType() !== "canvas") {
-			new Notice("The current view must be a canvas");
-			return
-		}
 		
 		// @ts-ignore
 		const canvas = canvasView?.canvas;
