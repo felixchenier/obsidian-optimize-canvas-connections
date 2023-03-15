@@ -30,3 +30,5 @@ The `shortest path` option reconnects notes using their nearest edges, always us
 The `preserve axes` option also reconnects notes using their nearest edges, but it respects the axes on which a connection originally begins and ends. For instance, a connection that begins on the right side of a note could be changed to begin from the left, but not from the top or bottom. Use this option to preserve meaning in vertical and horizontal flow (e.g., top-to-bottom = time, left-to-right = details).
 
 **In doubt, use `preserve axes`.**
+
+In both cases, when no note is selected, the optimization is applied to the whole canvas.

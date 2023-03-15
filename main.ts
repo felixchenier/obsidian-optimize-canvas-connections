@@ -1,17 +1,6 @@
 import { ItemView, App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
-
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class OptimizeCanvasConnectionsPlugin extends Plugin {
 
 	async onload() {
 		this.addCommand({
@@ -21,7 +10,7 @@ export default class MyPlugin extends Plugin {
 				const canvasView = app.workspace.getActiveViewOfType(ItemView);
 				if (canvasView?.getViewType() == "canvas") {
 					if (!checking) {
-						this.Optimize('preserve-axes', false);
+						this.optimize('preserve-axes');
 					}
 					return true;
 				}
@@ -35,7 +24,7 @@ export default class MyPlugin extends Plugin {
 				const canvasView = app.workspace.getActiveViewOfType(ItemView);
 				if (canvasView?.getViewType() == "canvas") {
 					if (!checking) {
-						this.Optimize('shortest-path', false);
+						this.optimize('shortest-path');
 					}
 					return true;
 				}
@@ -48,7 +37,7 @@ export default class MyPlugin extends Plugin {
 
 	}
 	
-	async Optimize(option: string, applyToAll: boolean) {
+	async optimize(option: string) {
 		const canvasView = app.workspace.getActiveViewOfType(ItemView);
 		
 		// @ts-ignore
@@ -61,6 +50,10 @@ export default class MyPlugin extends Plugin {
 		currentSelection.forEach(function(selection) {
 			selectedIDs.push(selection.id);
 		})
+		let applyToAll = false;
+		if (selectedIDs.length == 0) {
+			applyToAll = true;
+		}
 		
 		// Go through every edge
 		for (let [edgeKey, edge] of canvas['edges']) {
